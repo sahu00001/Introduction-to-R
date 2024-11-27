@@ -1,0 +1,159 @@
+---
+title: 'R project: SLR and Bootstrap'
+author: "Sujata Sahu"
+date: "11th Dec 2022"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction:
+In this project I have to create the following two unique functions: 
+Simple linear Regression(SLR) function:It is defined as myslr() and creates estimates betas in a slr.
+Bootstrap Function:It is defined as myboot() and creates bootstrap esimates from a sample.
+
+# Data
+We will all apply our function to the mtcars data set and make a linear model `mpg ~ wt`
+
+Describe the data
+The data Motor Trend Car Road Test was extracted from the 1974 Motor Trend US magazine and it is comprises fuel consumption and 10 aspects of automobile design and performancee for 32 automoboiles.
+Describe the nature and type of the variables.
+The data contain the following variables:
+1. mpg -	Miles/(US) gallon 
+2. cyl -	Number of cylinders 
+3. disp -	Displacement (cu.in.)
+4. hp	- Gross horsepower
+5. drat -	Rear axle ratio
+6. wt -	Weight (1000 lbs)
+7. qsec	- 1/4 mile time
+8. vs	- Engine (0 = V-shaped, 1 = straight)
+9. am	- Transmission (0 = automatic, 1 = manual)
+10. gear -	Number of forward gears
+11. carb	- Number of carburetors
+There are 11 variables total, all of which are numerical. The 11 variables are all of the double type,from which 9 are quantitative and 2 qualitative.
+"vs" and "am" are qualitative variables and have nominal values where as the rest are quantitative.
+
+
+Plot the data -- be very creative and interpret the plots
+
+```{r cars}
+data(mtcars) 
+head(mtcars)
+library(ggplot2) 
+
+g1 = ggplot(mtcars, aes(x = wt, y=mpg, fill = cyl)) + geom_point() + geom_smooth(method="lm", formula=y~x)
+g2 = ggplot(mtcars, aes(x = vs, y=mpg, fill = cyl)) + geom_point() + geom_smooth(method="lm", formula=y~x)
+g3 = ggplot(mtcars, aes(x = cyl, y=disp)) + geom_point() + geom_smooth(method="lm", formula=y~x)
+g1
+g2
+g3
+
+```
+
+# Theory used
+Give the mathematical formulae in Latex.
+$$y_i = \beta_1 + \beta_2 x_i + \epsilon_i$$
+Interpret the meaning of the symbols.
+Where: 1.y_i  is the dependent variable or criterion variable 
+       2.x_i is the independent variable or predictor variable
+       3.beta_1 is the y-intercept,  
+       4.beta_2 is the slope of the line
+      and epsilon_i is the error for a given combination of x_i and y_i
+      
+$$\epsilon_i \sim N(o,\sigma^2)$$
+$\epsilon_i$ holds many assumptions specific to the model and is independently and identically distributed in the Normal of 0 and Sigma square.
+
+# Application of SLR to the mtcars data set
+Use R to analysze the data
+As it is given that we have to make a linear model between "wt" and "mpg" replaced x = wt and y = mpg
+```{r lr}
+y.lm=lm(mpg~wt,data=mtcars)
+y.lm
+```
+So the values of beta_1 and beta_2 are as follows
+1.beta_1 = 37.285$ (y-intercept)
+2.beta_2 = -5.344$ (slope)
+
+
+Check assumptions
+```{r normal}
+require(s20x)
+library(s20x)
+
+normcheck(y.lm,shapiro.wilk=TRUE)
+plot(y.lm, which =1)
+```
+
+Interpret the summary output.
+``````{r summary and confidence}
+summary(y.lm)
+ciReg(y.lm)
+```
+# interpretion of summary output
+The first summary parameter is residual which is calculated as the difference of predicted y value to the actual y value.Checking out the results we can see that the variation ranges from -4.5432 to 6.8727 and almost 50% of the values lie between -2.3647 and 1.4096.The next parameter that is the coefficients which tells about the standard deviation,tvalue and probability for null hypothesis.Standard error returned as 0.5591, and the value of t is far away from zero which shows a relationship between wt and mpg. The standard deviation of the regression that is the residual standard error , correlation coefficient, test statistic for F-test and p-value helps to know how well our data fits for the regression. We got a value for RSE as 3.046 which is the the difference in the true value aand observed value is approximately 3.046, 0.7446 as adjusted R squared tells that the most of the portion of the variablity in outcome can be explained by regression.The next parameter F-statistic helps to assess if atleast one predictor variable has a non zero coefficient, the value we got for f statistic is 91.38 and the corresponding p-value is 1.294e-10.According to the statistic the higher the F values lower the p value(p<0.05). And our model shows the required stats that means linaer regression is a good fit for our data.
+
+##Confidence Interval
+The results shows the  function gives the 95% confidence intercepts for the fitted model. The value of for $\beta_0$ (intercept) is 33.45050 and 41.11975 and for $\beta_1$ is -6.48631 and -4.20263
+
+# Now making my own Simple Linear Regression function(SLR function):
+```{r my slr function}
+myslr <- function(x, y,df){
+  y.lm = lm(y ~ x) #creates linear regression
+  sum = summary(y.lm) #shows summary
+  n = normcheck(y.lm, shapiro.wilk = T) #normalisationcheck
+  ci= ciReg(y.lm) #gives confidence interval
+  gp = ggplot(df, aes(x = x, y = y)) + geom_point() + geom_smooth(method = 'lm', formula = y~x) #plots the graph using aesthetics as x and y
+  ggsave('SLRplot.jpeg',plot = gp, dpi = 300)
+  pl = (list(n,gp))
+  op<-capture.output(summary(y.lm), file=NULL,append=FALSE)
+  op_df <-as.data.frame(op) 
+  write.csv(op_df,'Summarypredictiondata.csv')
+  return(list("summary" = sum, coefficients = ci, plot = pl))
+}
+```
+
+# Invoking my slr function 
+
+```{r invokes}
+myslrfunc= myslr(x=mtcars$wt,y=mtcars$mpg, df=mtcars)
+myslrfunc
+```
+
+What are the point and interval estimates?
+```{point and interval}
+point = myslrfunc$summary$coefficients
+point
+interval = myslrfunc$coefficients
+interval
+```
+# BootStrap
+
+Make a function `myboot` that will create  bootstrap estimates from a sample.
+The parameter estimated will be the population variance $\sigma^2$ of mpg for 4 cylinder cars. Though the function will be entirely general.
+
+```{r bootstrap}
+myboot = function(x, alpha=0.05, fun="var")
+{
+  n = length(x)  #to determine the variable's length
+  Iterator = 5000  #to provide a sample 5000 times the length of the input variable
+  y = sample(x, n*Iterator, replace = TRUE)
+  boot.m = matrix(y, nrow = n, ncol = Iterator, byrow = TRUE) 
+  xStat = apply(boot.m,2, "var")
+  q= quantile(xStat, c(alpha/2, 1-alpha/2))
+  histboot = hist(xStat, freq = FALSE,las = 1, main = paste("Histogram of Booststap sample","\n", "alpha = ", alpha, "iterations = ", Iterator, sep = " ", plot = T))
+  write.csv(as.data.frame(boot.m),"simulation.csv")
+  return(list(quantile = q, plot = histboot))
+}
+```
+# Invoking the function
+```{r bootstrap subset}
+dt= subset(mtcars, cyl == 4,  select = mpg)
+mybootstrapfunc = myboot(x= data.matrix(dt), alpha = 0.05)
+mybootstrapfunc
+```
