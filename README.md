@@ -1,6 +1,6 @@
 # Introduction to R
 
-Welcome to the repository where I share my master's work, showcasing one of the first projects where I was introduced to **R programming**. This project combines statistical concepts and programming to provide hands-on experience with **simple linear regression** (SLR) and **bootstrapping** techniques. It serves as a foundational exercise for anyone new to R or looking to strengthen their understanding of these concepts.
+This project combines statistical concepts with hands-on programming to provide practical experience in simple linear regression (SLR) and bootstrapping techniques. It serves as an excellent foundational exercise for beginners in R or anyone aiming to strengthen their understanding of these essential concepts.
 
 ---
 
